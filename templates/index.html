@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="bn" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>YouTube Video & Audio Downloader</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f5f3ff',
+              100: '#ede9fe',
+              500: '#8b5cf6',
+              600: '#7c3aed',
+              700: '#6d28d9',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @keyframes pulse-glow {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 0.8; }
+    }
+    .glow-bg {
+      animation: pulse-glow 6s infinite;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans selection:bg-purple-500 selection:text-white">
+
+  <!-- Background decorative light -->
+  <div class="fixed inset-0 overflow-hidden pointer-events-none -z-10">
+    <div class="absolute -top-40 -left-40 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl glow-bg"></div>
+    <div class="absolute top-1/2 -right-40 w-96 h-96 bg-red-600/15 rounded-full blur-3xl glow-bg"></div>
+  </div>
+
+  <!-- Header -->
+  <header class="border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-md sticky top-0 z-30 px-4 py-3.5">
+    <div class="max-w-3xl mx-auto flex items-center justify-between">
+      <div class="flex items-center space-x-2.5">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-red-600 to-purple-600 flex items-center justify-center shadow-lg shadow-red-500/20">
+          <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-purple-300 bg-clip-text text-transparent">YT Downloader</h1>
+          <p class="text-xs text-slate-400">Termux Ultra Fast Studio</p>
+        </div>
+      </div>
+      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+        Active
+      </span>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-1 max-w-3xl w-full mx-auto px-4 py-6 space-y-6">
+
+    <!-- Hero / Title -->
+    <div class="text-center space-y-2 pt-2">
+      <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight">
+        ইউটিউব ভিডিও ও অডিও ডাউনলোড
+      </h2>
+      <p class="text-sm text-slate-400 max-w-md mx-auto">
+        যেকোনো ইউটিউব ভিডিওর লিংক পেস্ট করে ফুল এইচডি বা এমপিথ্রিতে ডাউনলোড করুন সরাসরি আপনার ফোনে।
+      </p>
+    </div>
+
+    <!-- URL Input Card -->
+    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-3 sm:p-4 shadow-xl backdrop-blur-sm">
+      <form id="fetchForm" class="space-y-3" onsubmit="event.preventDefault(); fetchVideoInfo();">
+        <div class="relative flex items-center">
+          <div class="absolute left-3 text-slate-500 pointer-events-none">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+            </svg>
+          </div>
+          <input 
+            type="text" 
+            id="videoUrl" 
+            placeholder="ইউটিউব ভিডিওর লিংক পেস্ট করুন (যেমন: https://youtu.be/...)"
+            required
+            class="w-full bg-slate-950 border border-slate-700/80 rounded-xl pl-10 pr-24 py-3 text-sm focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 text-white placeholder-slate-500 transition-all"
+          >
+          <div class="absolute right-2 flex items-center gap-1">
+            <button 
+              type="button" 
+              onclick="pasteFromClipboard()" 
+              class="px-2.5 py-1.5 text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition-colors border border-slate-700 flex items-center gap-1"
+              title="ক্লিপবোর্ড থেকে পেস্ট করুন"
+            >
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+              </svg>
+              Paste
+            </button>
+          </div>
+        </div>
+
+        <button 
+          type="submit" 
+          id="fetchBtn"
+          class="w-full py-3 px-4 rounded-xl font-semibold text-sm bg-gradient-to-r from-red-600 via-purple-600 to-indigo-600 hover:from-red-500 hover:to-indigo-500 active:scale-[0.99] transition-all text-white shadow-lg shadow-purple-900/30 flex items-center justify-center gap-2"
+        >
+          <svg id="fetchIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          <span id="fetchBtnText">ভিডিও তথ্য দেখুন (Fetch Info)</span>
+        </button>
+      </form>
+    </div>
+
+    <!-- Error Alert -->
+    <div id="errorAlert" class="hidden bg-rose-500/10 border border-rose-500/30 text-rose-300 px-4 py-3 rounded-xl text-sm flex items-start gap-3">
+      <svg class="w-5 h-5 text-rose-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      <div id="errorMessage" class="flex-1 break-words"></div>
+    </div>
+
+    <!-- Video Info & Download Options Card -->
+    <div id="videoCard" class="hidden bg-slate-900/90 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl transition-all">
+      <!-- Media Preview Header -->
+      <div class="sm:flex border-b border-slate-800">
+        <div class="relative sm:w-64 aspect-video bg-black shrink-0 overflow-hidden">
+          <img id="videoThumb" src="" alt="Thumbnail" class="w-full h-full object-cover">
+          <span id="videoDuration" class="absolute bottom-2 right-2 bg-black/80 backdrop-blur-sm text-white font-mono text-xs px-2 py-0.5 rounded font-bold">00:00</span>
+        </div>
+        <div class="p-4 flex flex-col justify-between">
+          <div class="space-y-1.5">
+            <h3 id="videoTitle" class="font-bold text-base line-clamp-2 text-white">Title</h3>
+            <p id="videoChannel" class="text-xs text-purple-400 font-medium flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+              </svg>
+              <span>Channel Name</span>
+            </p>
+          </div>
+          <p id="videoViews" class="text-xs text-slate-500 mt-2">Views: N/A</p>
+        </div>
+      </div>
+
+      <!-- Format Selection Tabs -->
+      <div class="p-4 sm:p-5 space-y-4">
+        <div class="flex rounded-xl bg-slate-950 p-1 border border-slate-800">
+          <button 
+            type="button" 
+            id="tabVideo" 
+            onclick="switchTab('video')" 
+            class="flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-purple-600 text-white shadow transition-all flex items-center justify-center gap-1.5"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+            </svg>
+            ভিডিও (MP4)
+          </button>
+          <button 
+            type="button" 
+            id="tabAudio" 
+            onclick="switchTab('audio')" 
+            class="flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg text-slate-400 hover:text-white transition-all flex items-center justify-center gap-1.5"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
+            </svg>
+            শুধু অডিও (MP3)
+          </button>
+        </div>
+
+        <!-- Options Container -->
+        <div id="videoOptions" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <!-- Populated by JS -->
+        </div>
+
+        <div id="audioOptions" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <!-- Populated by JS -->
+        </div>
+
+        <!-- Extra Preference: Save directly to phone storage -->
+        <div class="pt-2 border-t border-slate-800 flex items-center justify-between text-xs text-slate-300">
+          <label for="saveSdcardCheckbox" class="flex items-center gap-2 cursor-pointer select-none">
+            <input type="checkbox" id="saveSdcardCheckbox" checked class="w-4 h-4 rounded text-purple-600 bg-slate-950 border-slate-700 focus:ring-purple-500">
+            <span>সরাসরি ফোনের ফোল্ডারেও সেভ করুন (<code class="text-purple-400">/sdcard/Download</code>)</span>
+          </label>
+        </div>
+
+        <!-- Start Download Button -->
+        <button 
+          type="button" 
+          id="startDownloadBtn" 
+          onclick="initiateDownload()" 
+          class="w-full py-3.5 px-4 rounded-xl font-bold text-sm bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-[0.99] text-white shadow-lg shadow-emerald-950/40 flex items-center justify-center gap-2 transition-all"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+          </svg>
+          <span id="downloadBtnText">ডাউনলোড শুরু করুন</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Active Download Progress Card -->
+    <div id="progressCard" class="hidden bg-slate-900 border border-purple-500/30 rounded-2xl p-5 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-3 h-3 rounded-full bg-purple-500 animate-ping"></div>
+          <span id="progressStatus" class="font-bold text-sm text-white">ডাউনলোড হচ্ছে...</span>
+        </div>
+        <span id="progressPercent" class="font-mono text-sm font-bold text-purple-400">0%</span>
+      </div>
+
+      <!-- Progress bar track -->
+      <div class="w-full bg-slate-950 rounded-full h-3 overflow-hidden border border-slate-800">
+        <div id="progressBar" class="bg-gradient-to-r from-purple-500 via-indigo-500 to-emerald-400 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+      </div>
+
+      <!-- Stats row -->
+      <div class="grid grid-cols-3 gap-2 text-center text-xs text-slate-400 pt-1">
+        <div class="bg-slate-950/60 p-2 rounded-lg border border-slate-800/80">
+          <p class="text-slate-500 text-[10px]">Speed</p>
+          <p id="progressSpeed" class="font-mono font-semibold text-slate-200 mt-0.5">0 KB/s</p>
+        </div>
+        <div class="bg-slate-950/60 p-2 rounded-lg border border-slate-800/80">
+          <p class="text-slate-500 text-[10px]">Size</p>
+          <p id="progressSize" class="font-mono font-semibold text-slate-200 mt-0.5">0 / 0</p>
+        </div>
+        <div class="bg-slate-950/60 p-2 rounded-lg border border-slate-800/80">
+          <p class="text-slate-500 text-[10px]">ETA</p>
+          <p id="progressEta" class="font-mono font-semibold text-slate-200 mt-0.5">--</p>
+        </div>
+      </div>
+
+      <!-- Complete Card Actions -->
+      <div id="completeActions" class="hidden pt-2 space-y-2">
+        <a 
+          id="directFileLink" 
+          href="#" 
+          class="w-full py-3 px-4 rounded-xl font-bold text-sm bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/30 transition-all"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+          </svg>
+          ফাইলটি ফোনে সেভ করুন (Download File)
+        </a>
+        <p id="sdcardNotice" class="text-xs text-center text-emerald-400"></p>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-800/80 py-4 px-4 text-center text-xs text-slate-500">
+    <p>Powered by Termux + Flask + yt-dlp &bull; Made with 💜</p>
+  </footer>
+
+  <script>
+    let currentVideoData = null;
+    let selectedQuality = null;
+    let activeTab = 'video';
+    let pollInterval = null;
+
+    async function pasteFromClipboard() {
+      try {
+        const text = await navigator.clipboard.readText();
+        if (text) {
+          document.getElementById('videoUrl').value = text.trim();
+          fetchVideoInfo();
+        }
+      } catch (err) {
+        alert("ক্লিপবোর্ড থেকে পেস্ট করার অনুমতি দিন বা বক্সে ম্যানুয়ালি পেস্ট করুন।");
+      }
+    }
+
+    function switchTab(tab) {
+      activeTab = tab;
+      const tabVideo = document.getElementById('tabVideo');
+      const tabAudio = document.getElementById('tabAudio');
+      const videoOptions = document.getElementById('videoOptions');
+      const audioOptions = document.getElementById('audioOptions');
+
+      if (tab === 'video') {
+        tabVideo.className = "flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-purple-600 text-white shadow transition-all flex items-center justify-center gap-1.5";
+        tabAudio.className = "flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg text-slate-400 hover:text-white transition-all flex items-center justify-center gap-1.5";
+        videoOptions.classList.remove('hidden');
+        audioOptions.classList.add('hidden');
+        // select first video
+        if (currentVideoData && currentVideoData.video_qualities.length > 0) {
+          selectFormat(currentVideoData.video_qualities[0], 'video_0');
+        }
+      } else {
+        tabAudio.className = "flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-purple-600 text-white shadow transition-all flex items-center justify-center gap-1.5";
+        tabVideo.className = "flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg text-slate-400 hover:text-white transition-all flex items-center justify-center gap-1.5";
+        audioOptions.classList.remove('hidden');
+        videoOptions.classList.add('hidden');
+        // select first audio
+        if (currentVideoData && currentVideoData.audio_qualities.length > 0) {
+          selectFormat(currentVideoData.audio_qualities[0], 'audio_0');
+        }
+      }
+    }
+
+    async function fetchVideoInfo() {
+      const url = document.getElementById('videoUrl').value.trim();
+      const errorAlert = document.getElementById('errorAlert');
+      const errorMessage = document.getElementById('errorMessage');
+      const videoCard = document.getElementById('videoCard');
+      const fetchBtn = document.getElementById('fetchBtn');
+      const fetchBtnText = document.getElementById('fetchBtnText');
+
+      errorAlert.classList.add('hidden');
+      videoCard.classList.add('hidden');
+
+      if (!url) return;
+
+      fetchBtn.disabled = true;
+      fetchBtnText.innerText = "ভিডিও তথ্য আনা হচ্ছে...";
+
+      try {
+        const res = await fetch('/api/info', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ url })
+        });
+        const data = await res.json();
+
+        if (!res.ok || data.error) {
+          throw new Error(data.error || 'Failed to fetch video details.');
+        }
+
+        currentVideoData = data;
+        renderVideoCard(data);
+      } catch (err) {
+        errorMessage.innerText = err.message;
+        errorAlert.classList.remove('hidden');
+      } finally {
+        fetchBtn.disabled = false;
+        fetchBtnText.innerText = "ভিডিও তথ্য দেখুন (Fetch Info)";
+      }
+    }
+
+    function renderVideoCard(data) {
+      document.getElementById('videoThumb').src = data.thumbnail;
+      document.getElementById('videoDuration').innerText = data.duration;
+      document.getElementById('videoTitle').innerText = data.title;
+      document.getElementById('videoChannel').querySelector('span').innerText = data.uploader;
+      document.getElementById('videoViews').innerText = `Views: ${data.view_count}`;
+
+      // Populate Video Formats
+      const videoContainer = document.getElementById('videoOptions');
+      videoContainer.innerHTML = '';
+      data.video_qualities.forEach((fmt, idx) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.id = `opt_video_${idx}`;
+        btn.className = `p-3 rounded-xl border text-left transition-all flex items-center justify-between ${idx === 0 ? 'bg-purple-950/40 border-purple-500 text-white' : 'bg-slate-950/60 border-slate-800 hover:border-slate-700 text-slate-300'}`;
+        btn.innerHTML = `
+          <div>
+            <p class="font-bold text-xs sm:text-sm text-white">${fmt.label}</p>
+            <p class="text-[11px] text-slate-400">Format: MP4 (Video + Audio)</p>
+          </div>
+          <span class="text-xs px-2 py-0.5 rounded bg-slate-800 text-purple-300 font-mono">${fmt.height}p</span>
+        `;
+        btn.onclick = () => selectFormat(fmt, `video_${idx}`);
+        videoContainer.appendChild(btn);
+      });
+
+      // Populate Audio Formats
+      const audioContainer = document.getElementById('audioOptions');
+      audioContainer.innerHTML = '';
+      data.audio_qualities.forEach((fmt, idx) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.id = `opt_audio_${idx}`;
+        btn.className = `p-3 rounded-xl border text-left transition-all flex items-center justify-between ${idx === 0 ? 'bg-purple-950/40 border-purple-500 text-white' : 'bg-slate-950/60 border-slate-800 hover:border-slate-700 text-slate-300'}`;
+        btn.innerHTML = `
+          <div>
+            <p class="font-bold text-xs sm:text-sm text-white">${fmt.label}</p>
+            <p class="text-[11px] text-slate-400">Original Audio Track</p>
+          </div>
+          <span class="text-xs px-2 py-0.5 rounded bg-slate-800 text-purple-300 font-mono uppercase">${fmt.ext}</span>
+        `;
+        btn.onclick = () => selectFormat(fmt, `audio_${idx}`);
+        audioContainer.appendChild(btn);
+      });
+
+      // Select default (first video format)
+      if (data.video_qualities.length > 0) {
+        selectFormat(data.video_qualities[0], 'video_0');
+      }
+
+      document.getElementById('videoCard').classList.remove('hidden');
+      document.getElementById('videoCard').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function selectFormat(fmt, elementId) {
+      selectedQuality = fmt;
+      // remove highlight from all
+      document.querySelectorAll('#videoOptions button, #audioOptions button').forEach(el => {
+        el.className = el.className.replace('bg-purple-950/40 border-purple-500 text-white', 'bg-slate-950/60 border-slate-800 text-slate-300');
+      });
+      const selectedEl = document.getElementById(`opt_${elementId}`);
+      if (selectedEl) {
+        selectedEl.className = selectedEl.className.replace('bg-slate-950/60 border-slate-800 text-slate-300', 'bg-purple-950/40 border-purple-500 text-white');
+      }
+    }
+
+    async function initiateDownload() {
+      if (!currentVideoData || !selectedQuality) return;
+
+      const saveSdcard = document.getElementById('saveSdcardCheckbox').checked;
+      const progressCard = document.getElementById('progressCard');
+      const startBtn = document.getElementById('startDownloadBtn');
+      const completeActions = document.getElementById('completeActions');
+
+      startBtn.disabled = true;
+      completeActions.classList.add('hidden');
+      progressCard.classList.remove('hidden');
+      progressCard.scrollIntoView({ behavior: 'smooth' });
+
+      document.getElementById('progressStatus').innerText = "ডাউনলোড শুরু হচ্ছে...";
+      document.getElementById('progressBar').style.width = "5%";
+      document.getElementById('progressPercent').innerText = "5%";
+
+      try {
+        const payload = {
+          url: currentVideoData.webpage_url,
+          format_spec: selectedQuality.format_spec,
+          is_audio: selectedQuality.type === 'audio',
+          audio_codec: selectedQuality.codec || 'mp3',
+          save_to_sdcard: saveSdcard,
+          title: currentVideoData.title
+        };
+
+        const res = await fetch('/api/start-download', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (!res.ok || data.error) {
+          throw new Error(data.error || "ডাউনলোড শুরু করতে ব্যর্থ হয়েছে।");
+        }
+
+        const taskId = data.task_id;
+        startPolling(taskId);
+      } catch (err) {
+        alert("ত্রুটি: " + err.message);
+        startBtn.disabled = false;
+        progressCard.classList.add('hidden');
+      }
+    }
+
+    function startPolling(taskId) {
+      if (pollInterval) clearInterval(pollInterval);
+
+      pollInterval = setInterval(async () => {
+        try {
+          const res = await fetch(`/api/progress/${taskId}`);
+          if (!res.ok) return;
+
+          const task = await res.json();
+
+          if (task.status === 'downloading') {
+            document.getElementById('progressStatus').innerText = "ডাউনলোড হচ্ছে...";
+            document.getElementById('progressBar').style.width = `${task.progress}%`;
+            document.getElementById('progressPercent').innerText = `${task.progress}%`;
+            document.getElementById('progressSpeed').innerText = task.speed;
+            document.getElementById('progressSize').innerText = `${task.downloaded_bytes} / ${task.total_bytes}`;
+            document.getElementById('progressEta').innerText = task.eta;
+          } else if (task.status === 'processing') {
+            document.getElementById('progressStatus').innerText = "প্রসেসিং ও মার্জিং হচ্ছে (FFmpeg)...";
+            document.getElementById('progressBar').style.width = "95%";
+            document.getElementById('progressPercent').innerText = "95%";
+            document.getElementById('progressSpeed').innerText = "Merging...";
+          } else if (task.status === 'completed') {
+            clearInterval(pollInterval);
+            document.getElementById('progressStatus').innerText = "ডাউনলোড সম্পন্ন! 🎉";
+            document.getElementById('progressBar').style.width = "100%";
+            document.getElementById('progressPercent').innerText = "100%";
+            document.getElementById('progressSpeed').innerText = "Done";
+            document.getElementById('progressEta').innerText = "0s";
+            document.getElementById('startDownloadBtn').disabled = false;
+
+            // Direct download link
+            const downloadUrl = `/api/get-file/${taskId}`;
+            const fileLink = document.getElementById('directFileLink');
+            fileLink.href = downloadUrl;
+            fileLink.setAttribute('download', task.filename);
+
+            if (task.saved_sdcard_path) {
+              document.getElementById('sdcardNotice').innerText = `✅ সরাসরি সেভ হয়েছে: ${task.saved_sdcard_path}`;
+            } else {
+              document.getElementById('sdcardNotice').innerText = '';
+            }
+
+            document.getElementById('completeActions').classList.remove('hidden');
+
+            // Trigger browser download automatically
+            window.location.href = downloadUrl;
+          } else if (task.status === 'error') {
+            clearInterval(pollInterval);
+            document.getElementById('progressStatus').innerText = "ব্যর্থ হয়েছে!";
+            document.getElementById('startDownloadBtn').disabled = false;
+            alert("ডাউনলোড ত্রুটি: " + (task.error || "Unknown error"));
+          }
+        } catch (e) {
+          console.error("Polling error:", e);
+        }
+      }, 1000);
+    }
+  </script>
+</body>
+</html>
