@@ -1,3 +1,14 @@
+---
+title: YouTube Downloader Web
+emoji: 🎥
+colorFrom: red
+colorTo: purple
+sdk: docker
+app_port: 5000
+pinned: false
+license: mit
+---
+
 # 🎥 YouTube Video & Audio Downloader Web App
 
 একটি আধুনিক, দ্রুতগতির এবং রেসপন্সিভ ইউটিউব ডাউনলোডার ওয়েব অ্যাপ্লিকেশন। এটি পাইথন (`Flask`), `yt-dlp` এবং `FFmpeg` ইঞ্জিন ব্যবহার করে যেকোনো ইউটিউব ভিডিওর বিভিন্ন রেজোলিউশন (1080p, 720p, 480p) এবং হাই-কোয়ালিটি MP3 অডিও ডাউনলোড করতে পারে।
